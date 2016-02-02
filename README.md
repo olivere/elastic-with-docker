@@ -18,11 +18,6 @@ Elasticsearch container and will periodically call the Nodes Info API.
 To start everything up, run `docker-compose up`, then watch `docker-compose logs`
 in another shell.
 
-## FAQ
-
-In case you are wondering why we are mounting Elasticsearch data on `/tmp/esdata`,
-refer to [this issue](https://github.com/docker-library/elasticsearch/issues/74).
-
 ## LICENSE
 
 MIT
