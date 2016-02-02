@@ -1,0 +1,13 @@
+app:
+  build: ./app
+  links:
+    - elasticsearch
+
+elasticsearch:
+  image: elasticsearch
+  command: elasticsearch
+  expose:
+    - "9200"
+    - "9300"
+  volumes:
+    - "/tmp/esdata:/usr/share/elasticsearch/data"
