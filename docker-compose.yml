@@ -1,13 +1,15 @@
-app:
-  build: ./app
-  links:
-    - elasticsearch
+version: '2'
 
-elasticsearch:
-  image: elasticsearch
-  command: elasticsearch
-  expose:
-    - "9200"
-    - "9300"
-  volumes:
-    - "/tmp/esdata:/usr/share/elasticsearch/data"
+services:
+  app:
+    build: ./app
+    # restart: always
+
+  elasticsearch:
+    image: elasticsearch
+    command: elasticsearch
+    expose:
+      - "9200"
+      - "9300"
+    volumes:
+      - "/tmp/esdata:/usr/share/elasticsearch/data"

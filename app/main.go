@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"sort"
@@ -12,11 +15,17 @@ import (
 )
 
 func main() {
-	log.Printf("Environment")
-	env := os.Environ()
-	sort.Strings(env)
-	for _, e := range env {
-		log.Printf("- %s", e)
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "showenv":
+			log.Printf("Environment")
+			env := os.Environ()
+			sort.Strings(env)
+			for _, e := range env {
+				log.Printf("- %s", e)
+			}
+			os.Exit(0)
+		}
 	}
 
 	// Give Elasticsearch some time to startup
@@ -24,13 +33,29 @@ func main() {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	url := fmt.Sprintf("http://%s:%s",
-		os.Getenv("ELASTICSEARCH_PORT_9200_TCP_ADDR"),
-		os.Getenv("ELASTICSEARCH_PORT_9200_TCP_PORT"))
+	ips, err := net.LookupIP("elasticsearch")
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Lookup for elasticsearch returns the following IPs:")
+	for _, ip := range ips {
+		log.Printf("%v", ip)
+	}
+	log.Printf("Retrieving http://elasticsearch:9200:")
+	res, err := http.Get("http://elasticsearch:9200")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%v", string(body))
+
+	url := "http://elasticsearch:9200"
 	log.Printf("connecting to %v", url)
-	client, err := elastic.NewClient(
-		elastic.SetSniff(false),
-		elastic.SetURL(url))
+	client, err := elastic.NewClient(elastic.SetURL(url))
 	if err != nil {
 		log.Fatal(err)
 	}
