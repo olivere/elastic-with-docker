@@ -1,12 +1,15 @@
-version: '2'
+version: '2.1'
 
 services:
   app:
     build: ./app
-    # restart: always
+    restart: on-failure
+    depends_on:
+      elasticsearch:
+        condition: service_started
 
   elasticsearch:
-    image: elasticsearch
+    image: elasticsearch:5
     command: elasticsearch
     expose:
       - "9200"

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,7 +12,7 @@ import (
 	"sort"
 	"time"
 
-	elastic "gopkg.in/olivere/elastic.v3"
+	elastic "gopkg.in/olivere/elastic.v5"
 )
 
 func main() {
@@ -28,9 +29,6 @@ func main() {
 		}
 	}
 
-	// Give Elasticsearch some time to startup
-	time.Sleep(10 * time.Second)
-
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	ips, err := net.LookupIP("elasticsearch")
@@ -41,6 +39,7 @@ func main() {
 	for _, ip := range ips {
 		log.Printf("%v", ip)
 	}
+
 	log.Printf("Retrieving http://elasticsearch:9200:")
 	res, err := http.Get("http://elasticsearch:9200")
 	if err != nil {
@@ -94,7 +93,8 @@ func main() {
 }
 
 func showNodes(client *elastic.Client) error {
-	info, err := client.NodesInfo().Do()
+	ctx := context.Background()
+	info, err := client.NodesInfo().Do(ctx)
 	if err != nil {
 		return err
 	}
