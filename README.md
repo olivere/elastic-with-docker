@@ -4,7 +4,7 @@ This is a small example of how to use [Elastic](https://github.com/olivere/elast
 
 We use Docker Compose to orchestrates the containers. I've been using it successfully with Docker Compose 1.19+.  The Docker compose configuration files use version 3 (see [here](https://docs.docker.com/compose/compose-file/compose-versioning/) for Docker Compile file versioning matrix).
 
-Notice there are two official Elasticsearch 6.x containers: The OSS image at `docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.1` (which we use here as default) and the full image `docker.elastic.co/elasticsearch/elasticsearch:6.3.1`. You need a license for the latter after a grace period. For more information, read the [official documentation on Installing Elasticsearch with Docker](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html).
+Notice there are two official Elasticsearch 6.x images: The OSS image at `docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.1` (which we use here as default) and the full image `docker.elastic.co/elasticsearch/elasticsearch:6.3.1`. You need a license for the latter after a grace period. For more information, read the [official documentation on Installing Elasticsearch with Docker](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html).
 
 Make sure to create a `./data` directory locally and uncomment the `volumnes` section in Docker Compose file(s) if you want your data to be persistent.
 
