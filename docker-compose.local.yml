@@ -1,0 +1,40 @@
+# Run Elasticsearch in Docker only. The app will be run on the host.
+version: '3'
+
+services:
+  elasticsearch:
+    # This is the OSS image, which comes without X-Pack, ML etc.
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.1
+    # This is the full image which includes everything but needs a license after some grace period.
+    # image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
+
+    # Make ES available both on _local_ and _site_,
+    # and use use _local_ for the publish_host.
+    #
+    # See here for details on network configuration:
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-network.html
+    command: elasticsearch -Enetwork.host=_local_,_site_ -Enetwork.publish_host=_local_
+
+    environment:
+    # Set the cluster name (optional)
+    - cluster.name=eslocal
+    - bootstrap.memory_lock=true
+    # - http.host=0.0.0.0
+    # - transport.host=127.0.0.1
+    # X-Pack is only in the full ES image, not the OSS image.
+    # - xpack.security.enabled=false
+    - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    # Some useful ulimits
+    ulimits:
+      nproc: 65536
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+    # volumes:
+    #   # Make sure to create the ./data folder before starting
+    #   - ./data:/usr/share/elasticsearch/data

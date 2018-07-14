@@ -2,24 +2,40 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"sort"
+	"syscall"
 	"time"
 
-	elastic "gopkg.in/olivere/elastic.v5"
+	"github.com/olivere/elastic"
 )
 
 func main() {
+	var (
+		esURL = flag.String("url", "http://elasticsearch:9200", "Elasticsearch connection string")
+	)
+	flag.Parse()
+
+	if *esURL == "" {
+		log.Fatal("missing -url flag")
+	}
+	url, err := url.Parse(*esURL)
+	if err != nil {
+		log.Fatalf("invalid -url flag: %v", err)
+	}
+
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "showenv":
-			log.Printf("Environment")
+			log.Println("Environment")
 			env := os.Environ()
 			sort.Strings(env)
 			for _, e := range env {
@@ -31,34 +47,52 @@ func main() {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	ips, err := net.LookupIP("elasticsearch")
+	log.Printf("Looking up hostname %q", url.Hostname())
+	ips, err := net.LookupIP(url.Hostname())
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Lookup for elasticsearch returns the following IPs:")
+	log.Printf("Lookup for hostname %q returns the following IPs:", url.Hostname())
 	for _, ip := range ips {
 		log.Printf("%v", ip)
 	}
 
-	log.Printf("Retrieving http://elasticsearch:9200:")
-	res, err := http.Get("http://elasticsearch:9200")
-	if err != nil {
-		log.Fatal(err)
+	// Check ES version and status
+	{
+		log.Printf("Retrieving %s:", *esURL)
+		res, err := http.Get(*esURL)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("%v", string(body))
 	}
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("%v", string(body))
 
-	url := "http://elasticsearch:9200"
-	log.Printf("connecting to %v", url)
-	client, err := elastic.NewClient(elastic.SetURL(url))
+	// Check ES nodes configuration
+	{
+		log.Printf("Retrieving %s:", *esURL+"/_nodes/http?pretty=true")
+		res, err := http.Get(*esURL + "/_nodes/http?pretty=true")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("%v", string(body))
+	}
+
+	log.Printf("Connecting to %s", *esURL)
+	client, err := elastic.NewClient(elastic.SetURL(*esURL))
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("connected to %v", url)
+	log.Printf("Connected to %s", *esURL)
 
 	errc := make(chan error)
 
@@ -82,7 +116,7 @@ func main() {
 
 	go func() {
 		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt, os.Kill)
+		signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 		log.Printf("existing with signal %v", fmt.Sprint(<-c))
 		errc <- nil
 	}()
