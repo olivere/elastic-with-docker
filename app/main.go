@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v6"
 )
 
 func main() {

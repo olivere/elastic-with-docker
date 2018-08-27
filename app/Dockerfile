@@ -1,9 +1,8 @@
-FROM golang:1.10
+FROM golang:1.11rc2
 
 WORKDIR /go/src/app
 COPY . .
 
-RUN go get -d -v ./...
-RUN go install -v ./...
+ENV GO111MODULE=on
 
-CMD ["app"]
+CMD ["go", "run", "main.go"]
