@@ -11,11 +11,12 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"runtime"
 	"sort"
 	"syscall"
 	"time"
 
-	"github.com/olivere/elastic/v6"
+	"github.com/olivere/elastic"
 )
 
 func main() {
@@ -46,6 +47,9 @@ func main() {
 	}
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	log.Printf("Running %s\n", runtime.Version())
+	log.Printf("Version of github.com/olivere/elastic: %s\n", elastic.Version)
 
 	log.Printf("Looking up hostname %q", url.Hostname())
 	ips, err := net.LookupIP(url.Hostname())
@@ -103,6 +107,7 @@ func main() {
 		}
 
 		t := time.NewTicker(10 * time.Second)
+		defer t.Stop()
 		for {
 			select {
 			case <-t.C:
